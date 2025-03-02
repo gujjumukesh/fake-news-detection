@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>News Classifier</title>
+    <style>
+      /* Add some basic styling to the page */
+      body {
+      
+        background-image: url('https://img.freepik.com/premium-photo/generative-ai-background-filled-with-mesh-lines-that-connect_124437-2465.jpg');
+        background-size: cover;
+        background-position: center;
+        
+      }
+      
+      h1 {
+        color: #fffbfb;
+        text-align: center;
+      }
+      
+      form {
+        width: 50%;
+        margin: 40px auto;
+        padding: 20px;
+        border: 1px solid #fdfdfd;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      
+      label {
+        color: #fdfdfd;
+        display: block;
+        margin-bottom: 10px;
+      }
+      
+      textarea {
+        width: 100%;
+        height: 150px;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+      }
+      
+      input[type="submit"] {
+        background-color: #4CAF50;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      
+      input[type="submit"]:hover {
+        background-color: #3e8e41;
+      }
+      p{
+        color: #fffbfb;
+      }
+      
+      .prediction {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1bc2ff;
+      }
+      
+      .news-article {
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>News Classifier</h1>
+    <form action="" method="post">
+      <label for="news">Enter news article:</label>
+      <textarea id="news" name="news" rows="10" cols="50"></textarea>
+      <input type="submit" value="Classify">
+    </form>
+    {% if prediction %}
+      <p class="prediction">Prediction: {{ prediction }}</p>
+      <p>News Article: {{ news_article }}</p>
+    {% endif %}
+  </body>
+</html>
