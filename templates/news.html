@@ -1,83 +1,583 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>News Classifier</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-      /* Add some basic styling to the page */
-      body {
-      
-        background-image: url('https://img.freepik.com/premium-photo/generative-ai-background-filled-with-mesh-lines-that-connect_124437-2465.jpg');
-        background-size: cover;
-        background-position: center;
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --dark: #0f172a;
+            --glass: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #0f172a, #1e293b, #0f172a, #020617);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        header {
+            margin-top: 50px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            background: -webkit-linear-gradient(var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 50px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid transparent;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tab:hover:not(.active) {
+            color: white;
+        }
+
+        /* Manual Input Section */
+        #manual-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 150px;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
+        }
+
+        button.action-btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        button.action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        button.action-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Prediction Result Box */
+        .result-box {
+            margin-top: 20px;
+            padding: 25px;
+            border-radius: 16px;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            animation: fadeIn 0.5s ease forwards;
+            border-left: 5px solid transparent;
+        }
+
+        .result-box.true-news {
+            border-left-color: var(--success);
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .result-box.fake-news {
+            border-left-color: var(--danger);
+            box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.1);
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .true-news .result-title { color: var(--success); }
+        .fake-news .result-title { color: var(--danger); }
+
+        .prob-bar-container {
+            margin-top: 15px;
+        }
+
+        .prob-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #cbd5e1;
+        }
+
+        .prob-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            transition: width 1s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        .fill-true { background: var(--success); }
+        .fill-fake { background: var(--danger); }
+
+        /* Live News Section */
+        #live-section {
+            display: none;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .news-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .news-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+        }
+
+        .news-body {
+            padding: 20px;
+        }
+
+        .news-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-source {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 15px;
+        }
+
+        .news-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .badge-true {
+            background: rgba(16, 185, 129, 0.8);
+            color: white;
+            border: 1px solid rgba(16, 185, 129, 1);
+        }
+
+        .badge-fake {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: 1px solid rgba(239, 68, 68, 1);
+        }
+
+        .badge-unknown {
+            background: rgba(148, 163, 184, 0.8);
+            color: white;
+        }
         
-      }
-      
-      h1 {
-        color: #fffbfb;
-        text-align: center;
-      }
-      
-      form {
-        width: 50%;
-        margin: 40px auto;
-        padding: 20px;
-        border: 1px solid #fdfdfd;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      }
-      
-      label {
-        color: #fdfdfd;
-        display: block;
-        margin-bottom: 10px;
-      }
-      
-      textarea {
-        width: 100%;
-        height: 150px;
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-      }
-      
-      input[type="submit"] {
-        background-color: #4CAF50;
-        color: #fff;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-      }
-      
-      input[type="submit"]:hover {
-        background-color: #3e8e41;
-      }
-      p{
-        color: #fffbfb;
-      }
-      
-      .prediction {
-        font-size: 18px;
-        font-weight: bold;
-        color: #1bc2ff;
-      }
-      
-      .news-article {
-        color: #666;
-      }
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        .loader-lg {
+            width: 50px;
+            height: 50px;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
     </style>
-  </head>
-  <body>
-    <h1>News Classifier</h1>
-    <form action="" method="post">
-      <label for="news">Enter news article:</label>
-      <textarea id="news" name="news" rows="10" cols="50"></textarea>
-      <input type="submit" value="Classify">
-    </form>
-    {% if prediction %}
-      <p class="prediction">Prediction: {{ prediction }}</p>
-      <p>News Article: {{ news_article }}</p>
-    {% endif %}
-  </body>
+</head>
+<body>
+
+    <header>
+        <h1>Fake News Intelligence</h1>
+        <p class="subtitle">AI-Powered Real-time News Verification</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('manual')">Manual Verification</div>
+            <div class="tab" onclick="switchTab('live')">Live Stream (NewsAPI)</div>
+        </div>
+
+        <!-- Manual Input Section -->
+        <div id="manual-section">
+            <textarea id="news-input" placeholder="Paste an article, headline, or news content here..."></textarea>
+            <button class="action-btn" id="analyze-btn" onclick="analyzeText()">
+                <span>Analyze Legitimacy</span>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+
+            <!-- Result Box -->
+            <div id="result-box" class="result-box">
+                <div class="result-title" id="result-title">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span id="prediction-text">True News</span>
+                </div>
+                
+                <div class="prob-bar-container">
+                    <div class="prob-label">
+                        <span>True News Probability</span>
+                        <span id="true-prob-text">0%</span>
+                    </div>
+                    <div class="prob-bar-bg">
+                        <div class="prob-bar-fill fill-true" id="true-prob-bar" style="width: 0%"></div>
+                    </div>
+                    
+                    <div class="prob-label">
+                        <span>Fake News Probability</span>
+                        <span id="fake-prob-text">0%</span>
+                    </div>
+                    <div class="prob-bar-bg">
+                        <div class="prob-bar-fill fill-fake" id="fake-prob-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Fact Check Box -->
+                <div id="fact-check-box" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--glass-border);">
+                    <h3 style="font-size:1.1rem; color:#94a3b8; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        AI Fact-Check Conclusion
+                    </h3>
+                    <p id="fact-check-text" style="line-height:1.5; font-size:1rem;"></p>
+                    <div id="related-articles-box" style="margin-top:15px; display:none;">
+                        <span style="font-size:0.85rem; color:#64748b; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Verified Sources</span>
+                        <div id="related-articles" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live News Section -->
+        <div id="live-section">
+            <button class="action-btn" id="fetch-live-btn" onclick="fetchLiveNews()" style="margin-bottom: 20px;">
+                <span>Refresh Live Stream</span>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+
+            <div id="live-loader" style="display: none; text-align: center;">
+                <div class="loader loader-lg"></div>
+                <p style="color: #94a3b8; margin-top: 15px;">Fetching & Analyzing Live News...</p>
+            </div>
+
+            <div class="news-grid" id="news-grid">
+                <!-- Cards injected here via JS -->
+            </div>
+            
+            <p id="live-error" style="color: var(--danger); display: none; margin-top: 20px; text-align:center;"></p>
+        </div>
+
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('manual-section').style.display = tabId === 'manual' ? 'flex' : 'none';
+            document.getElementById('live-section').style.display = tabId === 'live' ? 'block' : 'none';
+            
+            if (tabId === 'live' && document.getElementById('news-grid').children.length === 0) {
+                fetchLiveNews();
+            }
+        }
+
+        async function analyzeText() {
+            const input = document.getElementById('news-input').value;
+            if (!input.trim()) return alert("Please enter news content to analyze.");
+
+            const btn = document.getElementById('analyze-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<div class="loader"></div> <span>Analyzing...</span>`;
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ news: input })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(data);
+                } else {
+                    alert(data.error || "An error occurred.");
+                }
+            } catch (err) {
+                alert("Failed to connect to the prediction server.");
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        function showResult(data) {
+            const box = document.getElementById('result-box');
+            const isTrue = data.prediction === "True News";
+            
+            box.style.display = 'block';
+            box.className = `result-box ${isTrue ? 'true-news' : 'fake-news'}`;
+            
+            document.getElementById('prediction-text').innerText = data.prediction;
+            
+            // Icon
+            const iconHTML = isTrue 
+                ? `<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                : `<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+            document.getElementById('result-title').innerHTML = `${iconHTML} <span id="prediction-text">${data.prediction}</span>`;
+
+            // Wait a tick for display:block to trigger animation reflow
+            setTimeout(() => {
+                document.getElementById('true-prob-bar').style.width = `${data.true_prob}%`;
+                document.getElementById('true-prob-text').innerText = `${data.true_prob}%`;
+                
+                document.getElementById('fake-prob-bar').style.width = `${data.fake_prob}%`;
+                document.getElementById('fake-prob-text').innerText = `${data.fake_prob}%`;
+            }, 50);
+
+            // Fact Check
+            const factBox = document.getElementById('fact-check-box');
+            if (data.conclusion) {
+                factBox.style.display = 'block';
+                document.getElementById('fact-check-text').innerText = data.conclusion;
+                
+                const artContainer = document.getElementById('related-articles');
+                const artBox = document.getElementById('related-articles-box');
+                artContainer.innerHTML = '';
+                
+                if (data.related_articles && data.related_articles.length > 0) {
+                    artBox.style.display = 'block';
+                    data.related_articles.forEach(art => {
+                        const title = art.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        const source = art.source ? art.source.replace(/</g, "&lt;").replace(/>/g, "&gt;") : 'Unknown Source';
+                        artContainer.innerHTML += `
+                            <a href="${art.url}" target="_blank" style="padding:15px; background:rgba(255,255,255,0.03); border-radius:12px; text-decoration:none; color:inherit; border:1px solid rgba(255,255,255,0.05); display:block;">
+                                <div style="font-weight:600; margin-bottom:5px; font-size:0.95rem; line-height:1.4;">${title}</div>
+                                <div style="font-size:0.8rem; color:var(--primary); font-weight:700;">${source}</div>
+                            </a>
+                        `;
+                    });
+                } else {
+                    artBox.style.display = 'none';
+                }
+            } else {
+                factBox.style.display = 'none';
+            }
+        }
+
+        async function fetchLiveNews() {
+            const grid = document.getElementById('news-grid');
+            const loader = document.getElementById('live-loader');
+            const errBox = document.getElementById('live-error');
+            const btn = document.getElementById('fetch-live-btn');
+            
+            grid.innerHTML = '';
+            errBox.style.display = 'none';
+            loader.style.display = 'block';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/live-news');
+                const data = await response.json();
+
+                if (response.ok) {
+                    data.articles.forEach(article => {
+                        const isTrue = article.prediction === "True News";
+                        const isFake = article.prediction === "Fake News";
+                        const badgeClass = isTrue ? 'badge-true' : (isFake ? 'badge-fake' : 'badge-unknown');
+                        
+                        const imgHTML = article.image 
+                            ? `<img src="${article.image}" class="news-img" alt="News Image">`
+                            : `<div class="news-img"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z"></path></svg></div>`;
+
+                        const card = document.createElement('a');
+                        card.className = 'news-card card-link';
+                        card.href = article.url || '#';
+                        card.target = '_blank';
+                        card.innerHTML = `
+                            ${imgHTML}
+                            <div class="news-badge ${badgeClass}">${article.prediction}</div>
+                            <div class="news-body">
+                                <div class="news-source">${article.publisher || 'Unknown Source'}</div>
+                                <div class="news-title">${article.title}</div>
+                                <div style="font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 10px;">
+                                    <span>T: ${article.true_prob}%</span>
+                                    <span>F: ${article.fake_prob}%</span>
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                } else {
+                    errBox.innerText = data.error || "Failed to fetch news.";
+                    errBox.style.display = 'block';
+                }
+            } catch (err) {
+                errBox.innerText = "Network Error. Could not fetch live news.";
+                errBox.style.display = 'block';
+            } finally {
+                loader.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
 </html>
